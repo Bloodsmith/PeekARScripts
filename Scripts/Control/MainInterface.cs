@@ -9,7 +9,6 @@ public class MainInterface : MonoBehaviour {
 	//Scripts
 	private JeffARManager camManager;	//this should be at top of script
 	PeekGUI menu;
-	
 	//Marker Info
 	int markerID = 0;
 	//use 1.086f for large markers (poster size), 3f for small markers (letter size) based on current furniture scale
