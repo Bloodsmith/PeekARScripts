@@ -6,43 +6,44 @@ using System.Runtime.InteropServices;
 
 
 public class MainInterface : MonoBehaviour {
-	//Scripts
 	private JeffARManager camManager;	//this should be at top of script
-	PeekGUI menu;
-	//Marker Info
 	int markerID = 0;
 	//use 1.086f for large markers (poster size), 3f for small markers (letter size) based on current furniture scale
-	float[] markerScale = {1.086f, 1.086f, 1.086f, 1.086f}; 
-	private MarkerState camState = MarkerState.Lost;
+	float Marker1Scale = 1.086f;
+	float Marker2Scale = 1.086f;
+	float Marker3Scale = 1.086f;
+	float Marker4Scale = 1.086f;
+	float[] markerScale;
+	
 	//Touch Restrictions
 	int minX = 25;
 	int maxX = 320;
 	int minY = 575;
 	int maxY = 1050;
 	int MaxHeightCheck = 1536;
-	//Should be 6 to fit proper size furniture on iPad screen
+	
 	int MaxFurniture = 6;
-	//Enum for modes
+	
+	PeekGUI menu;
+	
 	public enum Mode { Delete, Manip };
+	
 	public Mode mode = Mode.Manip;
+	
 	//Action for active furniture changes
 	public event Action<int> AmountFurniture;
-	//Touch Plane
-	public TouchPlane tplane;
-	//Furniture Movement
-	private Vector3 moveOffset;
-	private GameObject grabObj;
-	private GameObject rotateObj;
-	private Vector3 screenStartTouchPoint;
-	private Vector3 objStartPosition;
-	float scale;
-	//Public object to destroy
-	static GameObject go;
-	//Active Furniture List
-	public static List<GameObject> ActiveFurn = new List<GameObject>();
+	
+	public void SetMarkerScale(float one, float two, float three, float four){
+		Marker1Scale = one;
+		Marker2Scale = two;
+		Marker3Scale = three;
+		Marker4Scale = four;
+		markerScale = new float[]{Marker1Scale, Marker2Scale, Marker3Scale, Marker4Scale};
+	}
 	
 	// Use this for initialization
 	void Start () {
+		markerScale = new float[]{Marker1Scale, Marker2Scale, Marker3Scale, Marker4Scale};
 		if(Startup.GetGeneration() == "iPad2"){
 			minX /= 2;
 			maxX /= 2;
@@ -72,9 +73,9 @@ public class MainInterface : MonoBehaviour {
 			camState = MarkerState.Lost;
 		};
 		
-		
-		
 	}
+	
+	private MarkerState camState = MarkerState.Lost;
 	
     void FixedUpdate () {
 		
@@ -89,9 +90,16 @@ public class MainInterface : MonoBehaviour {
 		
 	}
 	
+	public TouchPlane tplane;
+	
+	private Vector3 moveOffset;
+	private GameObject grabObj;
+	private GameObject rotateObj;
+	private Vector3 screenStartTouchPoint;
+	private Vector3 objStartPosition;
+	float scale;
 	
 	
-	//Triggers when clear button is pressed
 	public static void DeleteAll() {
 		Debug.Log ("MainInterface DeleteAll");
 		foreach (GameObject go in ActiveFurn){
@@ -102,15 +110,17 @@ public class MainInterface : MonoBehaviour {
 		Camera.mainCamera.GetComponent<MainInterface>().mode = Mode.Manip;
 	}
 	
+	//Public object to destroy
+	static GameObject go;
 	//Method to destroy public object and release memory
 	public static void ReleaseMemory(){
 		Destroy(go);
 		Resources.UnloadUnusedAssets();
 	}
 	
-	//Delete Mode
 	void doDeleteMode() {
 		if (Input.touchCount > 0) {
+			
 			Touch f0 = Input.GetTouch(0);
 			if(!(f0.position.x > minX && f0.position.x < maxX && f0.position.y < maxY && f0.position.y > minY)){
 				go = FurnitureRayCast(f0);
@@ -121,24 +131,26 @@ public class MainInterface : MonoBehaviour {
 					menu.ResetManipulation();
 				}
 			}
+			
 		}
 	}
 	
-	//Movement Mode
 	void doManipMode() {
-		//checks if gui is being touched
-		if(menu.interactable){
-		//if(GUIUtility.hotControl == 0){
+		if(GUIUtility.hotControl == 0){
 			if (Input.touchCount == 0) {
+				
 				if (grabObj != null) {
+					
 					grabObj.rigidbody.isKinematic = true;
 				}
 				grabObj = null;
 			}
+			
 			else if (Input.touchCount == 1) {
 				Debug.Log ("DoMove()");
 				DoMove();
 			}
+			
 			else if (Input.touchCount == 2) {
 				Debug.Log ("DoRotate()");
 				DoRotate ();
@@ -146,14 +158,16 @@ public class MainInterface : MonoBehaviour {
 		}
 	}
 	
-	//Rotation Mode
 	private void DoRotate() {
+		
 		//Save current move object for rotation 
 		//and then disable moving object by setting null
 		if (grabObj != null) {
 			rotateObj = grabObj;
 			grabObj = null; //Stop any moving
 		}
+		
+		
 		//If either finger touches an object, rotate that object,
 		//otherwise rotate last moved object
 		Touch f0 = Input.GetTouch(0);
@@ -164,8 +178,10 @@ public class MainInterface : MonoBehaviour {
 		
 		if (o1 != null)
 			rotateObj = o1;
+		
 		else if (o2 != null)
 			rotateObj = o2;
+		
 		
 		//Average the movement amount of both fingers for rotation
 		Vector3 avgDeltaPos = (f0.deltaPosition + f1.deltaPosition)/2;
@@ -174,9 +190,10 @@ public class MainInterface : MonoBehaviour {
 			rotateObj.transform.Rotate(0, -avgDeltaPos.x * 0.1f, 0, Space.World);
 	}
 	
-	//Movement
 	private void DoMove() {
+		
 		Touch f0 = Input.GetTouch(0);
+		
 		/*
 		 * Grabbing
 		 * 1 finger touchdown will grab object under finger
@@ -196,10 +213,13 @@ public class MainInterface : MonoBehaviour {
 				return;
 			
 			Vector3 pop = tplane.PointOnPlaneFrom(f0);
+	
 			if(pop == Vector3.zero)
 				return;
 				
 			scale = (camera.transform.position - grabObj.transform.position).magnitude / (camera.transform.position - pop).magnitude;
+			
+		
 		}
 			//Need to save touch pos for offset calc
 		
@@ -215,6 +235,7 @@ public class MainInterface : MonoBehaviour {
 			Vector3 offsetPoint = tplane.PointOnPlaneFrom(screenStartTouchPoint);
 			if(offsetPoint == Vector3.zero)
 				return;
+			
 			
 			Vector3 moveOffset = offsetPoint - pop;
 			
@@ -274,6 +295,27 @@ public class MainInterface : MonoBehaviour {
 			return null;
 	}
 	
+	/*
+	void OnGUI() {
+		
+		//Needs to guard against null objects if deleter self-destructs gameobjects
+		foreach (GameObject go in activeFurn) {
+			Vector3 pos = go.transform.position;
+			Vector3 s_pos = camera.WorldToScreenPoint(pos);
+			GUI.Label(new Rect(s_pos.x, Screen.height - s_pos.y, 200, 75), go.name + ": " + go.transform.position);
+			//Debug.Log("MainInterface(101) - ScreenPos of Object: " + s_pos);
+		}
+	}
+	*/
+	
+	
+	
+	public static List<GameObject> ActiveFurn = new List<GameObject>();
+	
+	
+	
+	
+	
 	/**
 	 * Hook from interface.
 	 * 
@@ -283,7 +325,7 @@ public class MainInterface : MonoBehaviour {
 	 * 
 	 */ 
 	public void PickFurniture(Furniture furniture) {
-
+		
 		if (ActiveFurn.Count > MaxFurniture - 1) return;
 		
 		GameObject furnPrefab = Resources.Load ("Prefab Models/" + furniture.GetName()) as GameObject;
@@ -306,8 +348,9 @@ public class MainInterface : MonoBehaviour {
 			
 			furn.GetComponent<FurnitureData>().furniture = furniture;
 			
+			
 			furn.rigidbody.isKinematic = true;
-	
+			
 			furn.AddComponent<EmptySpotDropper>();
 			//furn.AddComponent<CollisionCheck>();
 			
@@ -343,7 +386,9 @@ public class MainInterface : MonoBehaviour {
 		}
 		
 		return count;
-	}	
+	}
+	
+	
 }
 
 
@@ -360,12 +405,15 @@ public class PeekInput {
 			
 			if (On1Touch != null)
 				On1Touch(Input.GetTouch(0));
+			
+			
 		}
 		
 		else if (Input.touchCount == 2)
 			On2Touch(Input.GetTouch(0), Input.GetTouch(1));
 	}
 }
+
 
 
 

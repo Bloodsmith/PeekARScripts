@@ -8,8 +8,6 @@ public class Deleter : MonoBehaviour {
 	private FurnitureData fi;
 	
 	void Start() {
-		//moveObj = GetComponent<FurnitureItem>().Item;
-		//Shader.SetGlobalFloat("_AlphaMod", 0);
 		fi = GetComponent<FurnitureData>();
 		fi.Shadowplane.transform.parent = null;
 		transform.collider.enabled = false;
@@ -24,7 +22,6 @@ public class Deleter : MonoBehaviour {
 		float m = 2*t*t*t;
 		
 		transform.Translate (0,m,0, Space.World);
-		//fi.transform.Translate(0,-m,0);
 		
 		fi.Shadowplane.renderer.material.SetFloat("_AlphaMod", h/3);
 		
